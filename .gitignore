@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+/zk-worker/
+
+# Built files
+dist/
+/zk-worker/.wrangler/
+
+# IDE and OS files
+.DS_Store
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+
+# Cloudflare local variables
+/zk-worker/.dev.vars

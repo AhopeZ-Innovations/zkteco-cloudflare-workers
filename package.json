@@ -1,0 +1,49 @@
+{
+  "name": "zk-workers-lib",
+  "version": "1.0.0",
+  "description": "A powerful, runtime-agnostic ZKTeco Biometric Device SDK for Node.js and Cloudflare Workers (raw TCP sockets).",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./transports/node": {
+      "types": "./dist/transports/node/index.d.ts",
+      "import": "./dist/transports/node/index.js",
+      "require": "./dist/transports/node/index.cjs"
+    },
+    "./transports/cloudflare": {
+      "types": "./dist/transports/cloudflare/index.d.ts",
+      "import": "./dist/transports/cloudflare/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup"
+  },
+  "keywords": [
+    "zkteco",
+    "biometric",
+    "fingerprint",
+    "attendance",
+    "cloudflare-workers",
+    "cloudflare-sockets",
+    "node",
+    "tcp",
+    "sdk"
+  ],
+  "author": "ArunKumar <arun@ahopez.in> (https://github.com/AhopeZ-Innovations)",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsup": "^8.0.2",
+    "typescript": "^5.3.3"
+  }
+}

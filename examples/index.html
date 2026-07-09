@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZKTeco Device Controller Dashboard</title>
+  <!-- Tailwind CSS v4 Browser Compiler -->
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
+    rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .mono-font {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(1.5rem);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: translateY(0.5rem);
+      }
+    }
+
+    .toast-item {
+      animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      pointer-events: auto;
+    }
+
+    .toast-item.fade-out {
+      animation: fadeOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+
+<body
+  class="h-full bg-zinc-950 text-zinc-100 flex flex-col overflow-hidden selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header -->
+  <header
+    class="border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md px-6 py-4 flex items-center justify-between z-10 shrink-0">
+    <div class="flex items-center space-x-3">
+      <div
+        class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-white">ZKTeco Biometric SDK Control Panel</h1>
+        <p class="text-xs text-zinc-400">Runtime-Agnostic Edge Device Manager</p>
+      </div>
+    </div>
+
+    <!-- Global Connection Badge -->
+    <div id="connectionStatusBadge"
+      class="flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs font-semibold">
+      <span class="h-2 w-2 rounded-full bg-zinc-500 animate-pulse"></span>
+      <span class="status-text">Disconnected</span>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 flex overflow-hidden min-h-0">
+
+    <!-- Left Sidebar: Configuration & Controls -->
+    <section
+      class="w-80 border-r border-zinc-900 bg-zinc-950 p-6 flex flex-col space-y-6 overflow-y-auto shrink-0 select-none">
+
+      <!-- Connection Card -->
+      <div class="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-5 flex flex-col space-y-4">
+        <h2 class="text-sm font-semibold tracking-wide uppercase text-zinc-400">Connection Settings</h2>
+
+        <div>
+          <label for="deviceIp" class="block text-xs text-zinc-500 mb-1.5 font-medium">Device IP Address</label>
+          <input type="text" id="deviceIp" value="1.1.1.1"
+            class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+            placeholder="e.g. 192.168.1.201">
+        </div>
+
+        <div>
+          <label for="devicePort" class="block text-xs text-zinc-500 mb-1.5 font-medium">Port</label>
+          <input type="number" id="devicePort" value="4370"
+            class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+            placeholder="4370">
+        </div>
+
+        <button id="btnConnect" onclick="toggleConnect()"
+          class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-indigo-600/10 cursor-pointer">
+          Connect Device
+        </button>
+      </div>
+
+      <!-- Quick Operations Card -->
+      <div id="diagnosticsSection"
+        class="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-5 flex flex-col space-y-4 opacity-50 pointer-events-none transition-opacity duration-300">
+        <h3 class="text-sm font-semibold tracking-wide uppercase text-zinc-400">Diagnostics & Options</h3>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="runCommand('voice')"
+            class="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl p-3 text-center flex flex-col items-center justify-center space-y-1.5 transition-all group cursor-pointer">
+            <svg class="w-5 h-5 text-indigo-400 group-hover:text-indigo-300" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+            <span class="text-xs font-semibold text-zinc-300">Voice Test</span>
+          </button>
+
+          <button onclick="runCommand('time')"
+            class="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl p-3 text-center flex flex-col items-center justify-center space-y-1.5 transition-all group cursor-pointer">
+            <svg class="w-5 h-5 text-indigo-400 group-hover:text-indigo-300" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0y0z" />
+            </svg>
+            <span class="text-xs font-semibold text-zinc-300">Sync Time</span>
+          </button>
+
+          <button onclick="runCommand('option')"
+            class="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl p-3 text-center flex flex-col items-center justify-center space-y-1.5 transition-all group cursor-pointer col-span-2">
+            <svg class="w-5 h-5 text-indigo-400 group-hover:text-indigo-300" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span class="text-xs font-semibold text-zinc-300">Read Device Options</span>
+          </button>
+        </div>
+
+        <button onclick="runCommand('reboot')"
+          class="w-full bg-red-950/40 hover:bg-red-950/60 border border-red-900/60 text-red-400 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer">
+          Reboot Device
+        </button>
+      </div>
+
+    </section>
+
+    <!-- Main Workspace (Center + Terminal) -->
+    <section class="flex-1 flex flex-col overflow-hidden bg-zinc-950">
+
+      <!-- Tabs Selector -->
+      <div class="border-b border-zinc-900 px-6 py-2 bg-zinc-950/50 flex space-x-1 shrink-0 select-none">
+        <button onclick="switchTab('info')" id="tabBtn-info"
+          class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-indigo-400 bg-zinc-900 border border-zinc-800 transition-all cursor-pointer">
+          Device Statistics
+        </button>
+        <button onclick="switchTab('users')" id="tabBtn-users"
+          class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer">
+          User Directory
+        </button>
+        <button onclick="switchTab('attendance')" id="tabBtn-attendance"
+          class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer">
+          Attendance Records
+        </button>
+      </div>
+
+      <!-- Tab Contents (Scrollable Container) -->
+      <div class="flex-1 overflow-y-auto p-6 min-h-0 relative">
+
+        <!-- Connected overlay state -->
+        <div id="disconnectOverlay"
+          class="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm z-30 flex flex-col items-center justify-center space-y-4 select-none">
+          <div
+            class="h-14 w-14 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+          </div>
+          <div class="text-center">
+            <h3 class="text-md font-semibold text-zinc-300">Device Offline</h3>
+            <p class="text-xs text-zinc-500 mt-1">Please connect to a device to enable controls and fetch metrics.</p>
+          </div>
+        </div>
+
+        <!-- TAB: Info -->
+        <div id="tabContent-info" class="tab-pane space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <!-- Serial Number Card -->
+            <div class="bg-zinc-900/30 border border-zinc-900 rounded-2xl p-5 flex flex-col justify-between">
+              <div class="text-xs font-semibold text-zinc-500 uppercase">Device Serial</div>
+              <div id="metaSerial" class="text-xl font-bold text-white tracking-tight mt-3">A6IR193560074</div>
+              <div id="metaFirmware" class="text-xs text-zinc-400 mt-2">Firmware: ZKFPVersion 10.0</div>
+            </div>
+
+            <!-- Connection Rate Card -->
+            <div class="bg-zinc-900/30 border border-zinc-900 rounded-2xl p-5 flex flex-col justify-between">
+              <div class="text-xs font-semibold text-zinc-500 uppercase">Platform & Vendor</div>
+              <div id="metaPlatform" class="text-xl font-bold text-white tracking-tight mt-3">ZEM560</div>
+              <div id="metaVendor" class="text-xs text-zinc-400 mt-2">Vendor: OEMVendor</div>
+            </div>
+
+            <!-- Time Sync Status -->
+            <div class="bg-zinc-900/30 border border-zinc-900 rounded-2xl p-5 flex flex-col justify-between">
+              <div class="text-xs font-semibold text-zinc-500 uppercase">Device Local Time</div>
+              <div id="metaTime" class="text-xl font-bold text-white tracking-tight mt-3">--:--:--</div>
+              <div class="text-xs text-emerald-400 mt-2 flex items-center space-x-1">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                <span>Active Sync Status</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Capacity Stats Grid -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-zinc-900/20 border border-zinc-900/80 rounded-xl p-4">
+              <span class="text-xs text-zinc-500 block">Total Users</span>
+              <span id="statUsers" class="text-2xl font-bold text-white block mt-1">4</span>
+            </div>
+            <div class="bg-zinc-900/20 border border-zinc-900/80 rounded-xl p-4">
+              <span class="text-xs text-zinc-500 block">Total Logs</span>
+              <span id="statLogs" class="text-2xl font-bold text-white block mt-1">15</span>
+            </div>
+            <div class="bg-zinc-900/20 border border-zinc-900/80 rounded-xl p-4">
+              <span class="text-xs text-zinc-500 block">Log Capacity</span>
+              <span id="statCapacity" class="text-2xl font-bold text-white block mt-1">100,000</span>
+            </div>
+            <div class="bg-zinc-900/20 border border-zinc-900/80 rounded-xl p-4">
+              <span class="text-xs text-zinc-500 block">Fingerprint Templates</span>
+              <span id="statFp" class="text-2xl font-bold text-white block mt-1">4</span>
+            </div>
+          </div>
+
+          <!-- Capacity Progress Bar -->
+          <div class="bg-zinc-900/30 border border-zinc-900 rounded-2xl p-5">
+            <div class="flex items-center justify-between text-xs text-zinc-400 mb-2">
+              <span>Log Storage Usage</span>
+              <span id="progressPercent">0.015%</span>
+            </div>
+            <div class="w-full bg-zinc-900 rounded-full h-2.5 overflow-hidden">
+              <div id="progressBar" class="bg-indigo-500 h-full rounded-full transition-all duration-500"
+                style="width: 0.15%"></div>
+            </div>
+          </div>
+
+          <div class="bg-zinc-900/30 border border-zinc-900 rounded-2xl p-5 space-y-4">
+            <h4 class="text-xs font-semibold tracking-wide uppercase text-zinc-400">Device Hardware Network
+              Configuration (View Only)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label for="netIpAddress" class="block text-xs text-zinc-500 mb-1.5 font-medium">Device Hardware
+                  IP</label>
+                <input type="text" id="netIpAddress" placeholder="Loading..." readonly
+                  class="w-full bg-zinc-950/60 border border-zinc-800/80 rounded-xl px-3.5 py-2 text-sm text-zinc-400 cursor-not-allowed focus:outline-none">
+              </div>
+              <div>
+                <label for="netSubnet" class="block text-xs text-zinc-500 mb-1.5 font-medium">Subnet Mask</label>
+                <input type="text" id="netSubnet" placeholder="Loading..." readonly
+                  class="w-full bg-zinc-950/60 border border-zinc-800/80 rounded-xl px-3.5 py-2 text-sm text-zinc-400 cursor-not-allowed focus:outline-none">
+              </div>
+              <div>
+                <label for="netGateway" class="block text-xs text-zinc-500 mb-1.5 font-medium">Gateway IP</label>
+                <input type="text" id="netGateway" placeholder="Loading..." readonly
+                  class="w-full bg-zinc-950/60 border border-zinc-800/80 rounded-xl px-3.5 py-2 text-sm text-zinc-400 cursor-not-allowed focus:outline-none">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Users -->
+        <div id="tabContent-users" class="tab-pane hidden space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-md font-bold text-white">Biometric User Directory</h3>
+            <button onclick="openAddUserModal()"
+              class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Add Edge User</span>
+            </button>
+          </div>
+
+          <div class="border border-zinc-900 bg-zinc-900/10 rounded-xl overflow-hidden">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-zinc-900/50 text-zinc-400 border-b border-zinc-900">
+                  <th class="px-4 py-3 font-semibold text-xs uppercase">User ID / UID</th>
+                  <th class="px-4 py-3 font-semibold text-xs uppercase">Name</th>
+                  <th class="px-4 py-3 font-semibold text-xs uppercase">Role</th>
+                  <th class="px-4 py-3 font-semibold text-xs uppercase">Card No</th>
+                  <th class="px-4 py-3 font-semibold text-xs uppercase text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="userTableBody">
+                <!-- User rows injected by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB: Attendance -->
+        <div id="tabContent-attendance" class="tab-pane hidden space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h3 class="text-md font-bold text-white">Device Check-In Logs</h3>
+
+            <!-- Date Range Controls -->
+            <div
+              class="flex flex-wrap items-center gap-2 bg-zinc-900/40 p-2 border border-zinc-900 rounded-xl select-none">
+              <div class="flex items-center space-x-1.5">
+                <span class="text-xs text-zinc-500">From</span>
+                <input type="date" id="logStartDate"
+                  class="bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-indigo-500">
+              </div>
+              <div class="flex items-center space-x-1.5">
+                <span class="text-xs text-zinc-500">To</span>
+                <input type="date" id="logEndDate"
+                  class="bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-indigo-500">
+              </div>
+              <button onclick="deleteLogsByRange()"
+                class="bg-red-950/40 hover:bg-red-950/60 border border-red-900/60 text-red-400 px-3 py-1 rounded text-xs font-semibold transition-all cursor-pointer">
+                Delete Range
+              </button>
+            </div>
+
+            <button onclick="runCommand('clearLog')"
+              class="bg-red-950/40 hover:bg-red-950/60 border border-red-900/60 text-red-400 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer">
+              Clear All Logs
+            </button>
+          </div>
+
+          <div class="border border-zinc-900 bg-zinc-900/10 rounded-xl overflow-hidden">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-zinc-900/50 text-zinc-400 border-b border-zinc-900">
+                  <th class="px-4 py-3 font-semibold text-xs uppercase">SN</th>
+                  <th class="px-4 py-3 font-semibold text-xs uppercase">User ID</th>
+                  <th class="px-4 py-3 font-semibold text-xs uppercase">Record Time</th>
+                  <th class="px-4 py-3 font-semibold text-xs uppercase">Verify Mode</th>
+                  <th class="px-4 py-3 font-semibold text-xs uppercase">Status Code</th>
+                  <th class="px-4 py-3 font-semibold text-xs uppercase text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="attendanceTableBody">
+                <!-- Attendance rows injected by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Terminal Output Console (Always Visible, Height-Constrained) -->
+      <footer class="border-t border-zinc-900 bg-zinc-950 h-56 flex flex-col overflow-hidden shrink-0">
+        <div class="border-b border-zinc-900 px-6 py-2 bg-zinc-900/20 flex items-center justify-between select-none">
+          <div class="flex items-center space-x-2">
+            <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-xs font-bold text-zinc-400 tracking-wider uppercase">Device Logs / SDK Console</span>
+          </div>
+          <button onclick="clearConsole()"
+            class="text-zinc-500 hover:text-zinc-300 text-xs font-semibold transition-colors cursor-pointer">
+            Clear Logs
+          </button>
+        </div>
+        <div id="terminalConsole"
+          class="flex-1 p-6 overflow-y-auto bg-zinc-950 text-emerald-400 mono-font text-xs space-y-2 select-text selection:bg-zinc-800 selection:text-white scrollbar-thin">
+          <div class="text-zinc-500">[System] SDK ready. Set options and connect to device...</div>
+        </div>
+      </footer>
+
+    </section>
+
+  </main>
+
+  <!-- HTML5 Modal Dialog for Adding User -->
+  <dialog id="addUserDialog"
+    class="bg-zinc-900/90 border border-zinc-800 text-white rounded-2xl p-6 shadow-2xl backdrop-blur-md max-w-md w-full focus:outline-none backdrop:bg-black/60">
+    <div class="flex flex-col space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 id="modalTitle" class="text-lg font-bold">Add User to biometric device</h3>
+        <button onclick="closeAddUserModal()" class="text-zinc-400 hover:text-white cursor-pointer">&times;</button>
+      </div>
+
+      <form id="addUserForm" onsubmit="submitAddUser(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1.5 font-medium">Unique UID (Number)</label>
+          <input type="number" id="formUid" required
+            class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1.5 font-medium">User String ID</label>
+          <input type="text" id="formUserId" required
+            class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1.5 font-medium">Display Name</label>
+          <input type="text" id="formName" required
+            class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1.5 font-medium">Role Code</label>
+          <select id="formRole"
+            class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            <option value="0">0 (Normal User)</option>
+            <option value="14">14 (Administrator)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1.5 font-medium">Card Number</label>
+          <input type="number" id="formCardno" value="0"
+            class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="flex items-center space-x-3 pt-2">
+          <button type="button" onclick="closeAddUserModal()"
+            class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2.5 rounded-xl text-sm font-semibold transition-all">Cancel</button>
+          <button type="submit"
+            class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-indigo-600/20">Submit</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- HTML5 Modal Dialog for Fingerprint Enrollment -->
+  <dialog id="enrollFpDialog"
+    class="bg-zinc-900/90 border border-zinc-800 text-white rounded-2xl p-6 shadow-2xl backdrop-blur-md max-w-sm w-full focus:outline-none backdrop:bg-black/60">
+    <div class="flex flex-col space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-bold">Enroll Fingerprint</h3>
+        <button onclick="closeEnrollFpModal()" class="text-zinc-400 hover:text-white cursor-pointer">&times;</button>
+      </div>
+
+      <form id="enrollFpForm" onsubmit="submitEnrollFp(event)" class="space-y-4">
+        <input type="hidden" id="enrollFpUserId">
+
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1.5 font-medium">Selected Finger</label>
+          <select id="enrollFpFingerIndex"
+            class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            <option value="0">0 - Right Thumb</option>
+            <option value="1">1 - Right Index</option>
+            <option value="2">2 - Right Middle</option>
+            <option value="3">3 - Right Ring</option>
+            <option value="4">4 - Right Little</option>
+            <option value="5">5 - Left Thumb</option>
+            <option value="6">6 - Left Index</option>
+            <option value="7">7 - Left Middle</option>
+            <option value="8">8 - Left Ring</option>
+            <option value="9">9 - Left Little</option>
+          </select>
+        </div>
+
+        <div class="text-xs text-zinc-400 leading-relaxed bg-zinc-950/50 p-3 rounded-xl border border-zinc-900">
+          <span class="text-amber-400 font-semibold block mb-1">⚠️ Action Required</span>
+          Putting the device into enroll mode will activate the sensor. The user must place their finger on the sensor
+          **3 times** when prompted.
+        </div>
+
+        <div class="flex items-center space-x-3 pt-2">
+          <button type="button" onclick="closeEnrollFpModal()"
+            class="flex-1 bg-zinc-850 hover:bg-zinc-800 text-zinc-300 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer">
+            Cancel
+          </button>
+          <button type="submit"
+            class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer">
+            Start Enroll
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Interactive JavaScript -->
+  <script>
+    const API_BASE = 'https://zk-worker.ahopez.workers.dev';
+    let isConnected = false;
+    let usersList = [];
+    let logsList = [];
+
+    // Log messages helper
+    function logToConsole(text, type = 'info') {
+      const consoleEl = document.getElementById('terminalConsole');
+      const timeStr = new Date().toLocaleTimeString();
+      let colorClass = 'text-indigo-400';
+      if (type === 'success') colorClass = 'text-emerald-400';
+      if (type === 'cmd') colorClass = 'text-violet-400';
+      if (type === 'warn') colorClass = 'text-amber-500';
+      if (type === 'error') colorClass = 'text-red-400';
+
+      consoleEl.innerHTML += `<div class="${colorClass}">[${timeStr}] ${text}</div>`;
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+
+      // Automatically trigger a premium toast notification
+      showToast(text, type);
+    }
+
+    function clearConsole() {
+      document.getElementById('terminalConsole').innerHTML = `<div class="text-zinc-500">[System] Console cleared.</div>`;
+    }
+
+    // Connect & Disconnect toggle
+    async function toggleConnect() {
+      const btn = document.getElementById('btnConnect');
+      const ip = document.getElementById('deviceIp').value;
+      const port = document.getElementById('devicePort').value;
+      const statusBadge = document.getElementById('connectionStatusBadge');
+      const diagnostics = document.getElementById('diagnosticsSection');
+      const overlay = document.getElementById('disconnectOverlay');
+
+      if (!isConnected) {
+        logToConsole(`Connecting to Edge device via local server: tcp://${ip}:${port}...`);
+        btn.disabled = true;
+        btn.innerText = 'Connecting...';
+
+        try {
+          const res = await fetch(`${API_BASE}/api/connect`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ip, port: Number(port) })
+          });
+          logToConsole(`Server response status: ${res.status} ${res.statusText}`);
+          const text = await res.text();
+          logToConsole(`Raw server response: "${text}"`);
+          const result = JSON.parse(text);
+          if (result.error) throw new Error(result.error);
+
+          isConnected = true;
+          logToConsole(`Connected successfully to ${ip}:${port}!`, 'success');
+
+          btn.innerText = 'Disconnect Device';
+          btn.classList.replace('bg-indigo-600', 'bg-zinc-800');
+          btn.classList.replace('hover:bg-indigo-500', 'hover:bg-zinc-700');
+
+          statusBadge.innerHTML = `<span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span><span class="status-text text-emerald-400">Connected to ${ip}</span>`;
+          diagnostics.classList.remove('opacity-50', 'pointer-events-none');
+          overlay.classList.add('hidden');
+
+          await fetchAllData();
+        } catch (err) {
+          logToConsole(`Connection failed: ${err.message}`, 'error');
+          btn.innerText = 'Connect Device';
+        } finally {
+          btn.disabled = false;
+        }
+      } else {
+        logToConsole(`Disconnecting from device...`);
+        btn.disabled = true;
+
+        try {
+          await fetch(`${API_BASE}/api/disconnect`, { method: 'POST' });
+          isConnected = false;
+
+          btn.innerText = 'Connect Device';
+          btn.classList.replace('bg-zinc-800', 'bg-indigo-600');
+          btn.classList.replace('hover:bg-zinc-700', 'hover:bg-indigo-500');
+
+          statusBadge.innerHTML = `<span class="h-2.5 w-2.5 rounded-full bg-zinc-500 animate-pulse"></span><span class="status-text">Disconnected</span>`;
+          diagnostics.classList.add('opacity-50', 'pointer-events-none');
+          overlay.classList.remove('hidden');
+          logToConsole(`SUCCESS: Session closed.`, 'success');
+        } catch (err) {
+          logToConsole(`Disconnect error: ${err.message}`, 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      }
+    }
+
+    // Fetch all datasets from the backend server
+    async function fetchAllData() {
+      logToConsole('[ZK] Syncing device data buffers...');
+      try {
+        // Fetch info
+        const infoRes = await fetch(`${API_BASE}/api/info`);
+        const infoData = await infoRes.json();
+        if (infoData.error) throw new Error(infoData.error);
+
+        // Update Info Tab Elements
+        document.getElementById('metaSerial').innerText = infoData.serial;
+        document.getElementById('metaFirmware').innerText = `Firmware: ${infoData.firmware}`;
+        document.getElementById('metaPlatform').innerText = infoData.platform;
+        document.getElementById('metaVendor').innerText = `Vendor: ${infoData.vendor}`;
+        document.getElementById('metaTime').innerText = new Date(infoData.time).toLocaleTimeString();
+
+        // Update Statistics
+        document.getElementById('statCapacity').innerText = infoData.info.logCapacity.toLocaleString();
+        document.getElementById('statFp').innerText = infoData.info.fpCounts;
+
+
+
+        // Fetch Users
+        const usersRes = await fetch(`${API_BASE}/api/users`);
+        const usersData = await usersRes.json();
+        if (usersData.error) throw new Error(usersData.error);
+        usersList = usersData;
+        renderUsers();
+
+        // Fetch Attendance logs
+        const attRes = await fetch(`${API_BASE}/api/attendance`);
+        const attData = await attRes.json();
+        if (attData.error) throw new Error(attData.error);
+        logsList = attData;
+        renderAttendance();
+
+        // Fetch Hardware Network Configuration
+        try {
+          const netRes = await fetch(`${API_BASE}/api/network`);
+          const netData = await netRes.json();
+          if (netData && !netData.error) {
+            document.getElementById('netIpAddress').value = netData.ip || '';
+            document.getElementById('netSubnet').value = netData.mask || '';
+            document.getElementById('netGateway').value = netData.gateway || '';
+          }
+        } catch (netErr) {
+          logToConsole(`Failed to load device network settings: ${netErr.message}`, 'warn');
+        }
+
+        logToConsole(`Device data synced successfully. Found ${usersList.length} users and ${logsList.length} attendance logs.`, 'success');
+      } catch (err) {
+        logToConsole(`Failed to fetch data: ${err.message}`, 'error');
+      }
+    }
+
+    // Switch workspace tabs
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('text-indigo-400', 'bg-zinc-900', 'border', 'border-zinc-800');
+        btn.classList.add('text-zinc-400', 'hover:text-zinc-200');
+      });
+      const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+      activeBtn.classList.replace('text-zinc-400', 'text-indigo-400');
+      activeBtn.classList.add('bg-zinc-900', 'border', 'border-zinc-800');
+
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.add('hidden'));
+      document.getElementById(`tabContent-${tabId}`).classList.remove('hidden');
+    }
+
+    // Dynamic operations
+    async function runCommand(command) {
+      try {
+        if (command === 'voice') {
+          logToConsole(`Triggering voice test payload...`);
+          await fetch(`${API_BASE}/api/voice-test`, { method: 'POST' });
+          logToConsole(`Voice test triggered on edge device speaker.`, 'success');
+        } else if (command === 'time') {
+          logToConsole(`Syncing device time...`);
+          const res = await fetch(`${API_BASE}/api/sync-time`, { method: 'POST' });
+          const data = await res.json();
+          logToConsole(`Time sync successful. Current time: ${new Date(data.time).toLocaleString()}`, 'success');
+          document.getElementById('metaTime').innerText = new Date(data.time).toLocaleTimeString();
+        } else if (command === 'reboot') {
+          logToConsole(`Sending reboot command...`);
+          await fetch(`${API_BASE}/api/reboot`, { method: 'POST' });
+          logToConsole(`Reboot payload sent. Device is restarting. Connection lost.`, 'warn');
+          toggleConnect();
+        } else if (command === 'clearLog') {
+          if (confirm('Are you sure you want to permanently clear all logs?')) {
+            logToConsole(`Clearing attendance logs...`);
+            await fetch(`${API_BASE}/api/clear-attendance`, { method: 'POST' });
+            logToConsole(`Attendance logs cleared successfully.`, 'success');
+            await fetchAllData();
+          }
+        } else if (command === 'option') {
+          logToConsole(`Querying device options...`);
+          const keys = ['~PIN2Width', 'FaceFunOn', '~SSR', '~SerialNumber', '~Platform', '~OS'];
+          for (const key of keys) {
+            const res = await fetch(`${API_BASE}/api/option`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ keyword: key })
+            });
+            const data = await res.json();
+            logToConsole(`[ZK Option] ${data.keyword}: ${data.value}`, 'success');
+          }
+          logToConsole(`Config options loaded.`, 'success');
+        }
+      } catch (err) {
+        logToConsole(`Command execution failed: ${err.message}`, 'error');
+      }
+    }
+
+    // Render Users list
+    function renderUsers() {
+      const tbody = document.getElementById('userTableBody');
+      tbody.innerHTML = '';
+      usersList.forEach(user => {
+        tbody.innerHTML += `
+          <tr class="border-b border-zinc-900 hover:bg-zinc-900/35 transition-colors">
+            <td class="px-4 py-3.5">
+              <div class="font-medium text-white font-mono">${user.userId}</div>
+              <div class="text-[10px] text-zinc-500 font-mono mt-0.5">UID: ${user.uid}</div>
+            </td>
+            <td class="px-4 py-3.5 text-white font-semibold">${user.name}</td>
+            <td class="px-4 py-3.5">
+              <select onchange="changeUserRole(${user.uid}, '${user.userId}', '${user.name}', this.value, ${user.cardno})" class="bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                <option value="0" ${user.role === 0 ? 'selected' : ''}>User (0)</option>
+                <option value="14" ${user.role === 14 ? 'selected' : ''}>Admin (14)</option>
+              </select>
+            </td>
+            <td class="px-4 py-3.5 text-zinc-400 font-mono">${user.cardno || '--'}</td>
+            <td class="px-4 py-3.5 text-right flex items-center justify-end space-x-3">
+              <button onclick="openEnrollFpModal('${user.userId}')" class="text-xs text-emerald-400 hover:text-emerald-300 hover:underline font-semibold cursor-pointer">Enroll FP</button>
+              <button onclick="openEditUserModal(${user.uid}, '${user.userId}', '${user.name}', ${user.role}, ${user.cardno})" class="text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-semibold cursor-pointer">Edit</button>
+              <button onclick="deleteDeviceUser(${user.uid})" class="text-xs text-red-500 hover:text-red-400 hover:underline font-semibold cursor-pointer">Delete</button>
+            </td>
+          </tr>
+        `;
+      });
+      updateStats();
+    }
+
+    // Render Attendance list
+    function renderAttendance() {
+      const tbody = document.getElementById('attendanceTableBody');
+      tbody.innerHTML = '';
+      logsList.forEach(log => {
+        tbody.innerHTML += `
+          <tr class="border-b border-zinc-900 hover:bg-zinc-900/35 transition-colors">
+            <td class="px-4 py-3.5 text-zinc-400 font-mono">${log.sn}</td>
+            <td class="px-4 py-3.5 font-medium text-white font-mono">${log.user_id}</td>
+            <td class="px-4 py-3.5 text-zinc-300">${new Date(log.record_time).toLocaleString()}</td>
+            <td class="px-4 py-3.5 font-mono text-zinc-400">Fingerprint (${log.type})</td>
+            <td class="px-4 py-3.5">
+              <span class="px-2 py-0.5 text-xs rounded font-semibold ${log.state === 0 ? 'bg-emerald-950/80 border border-emerald-800 text-emerald-300' : 'bg-amber-950/80 border border-amber-800 text-amber-300'}">
+                ${log.state === 0 ? 'Check In (0)' : 'Check Out (1)'}
+              </span>
+            </td>
+            <td class="px-4 py-3.5 text-right">
+              <button onclick="deleteLogBySn(${log.sn})" class="text-xs text-red-500 hover:text-red-400 hover:underline font-semibold cursor-pointer">Delete</button>
+            </td>
+          </tr>
+        `;
+      });
+      updateStats();
+    }
+
+    // Update capacity metrics card dynamically
+    function updateStats() {
+      const userCount = usersList.length;
+      const logCount = logsList.length;
+
+      document.getElementById('statUsers').innerText = userCount;
+      document.getElementById('statLogs').innerText = logCount;
+
+      const capacityLimit = 100000;
+      const usagePercentage = ((logCount / capacityLimit) * 100).toFixed(4);
+
+      document.getElementById('progressPercent').innerText = `${usagePercentage}%`;
+      document.getElementById('progressBar').style.width = `${usagePercentage}%`;
+    }
+
+    // Modal dialog trigger helpers
+    const modal = document.getElementById('addUserDialog');
+
+    function openAddUserModal() {
+      document.getElementById('modalTitle').innerText = 'Add User to biometric device';
+      document.getElementById('formUid').disabled = false;
+      document.getElementById('formUserId').disabled = false; // Enabled for new users
+
+      const maxUid = usersList.reduce((max, u) => u.uid > max ? u.uid : max, 0);
+      document.getElementById('formUid').value = maxUid + 1;
+
+      // Calculate sequential numeric user id based on max numeric userId string
+      const maxUserIdNum = usersList.reduce((max, u) => {
+        const num = parseInt(u.userId, 10);
+        return (!isNaN(num) && num > max) ? num : max;
+      }, 0);
+      const nextUserIdVal = maxUserIdNum > 0 ? maxUserIdNum + 1 : 101;
+
+      document.getElementById('formUserId').value = String(nextUserIdVal);
+      document.getElementById('formName').value = '';
+      document.getElementById('formRole').value = 0;
+      document.getElementById('formCardno').value = 0;
+      modal.showModal();
+    }
+
+    function openEditUserModal(uid, userId, name, role, cardno) {
+      document.getElementById('modalTitle').innerText = 'Edit Biometric User';
+      document.getElementById('formUid').value = uid;
+      document.getElementById('formUid').disabled = true; // UID cannot be changed
+      document.getElementById('formUserId').value = userId;
+      document.getElementById('formUserId').disabled = true; // User ID cannot be changed in Edit mode
+      document.getElementById('formName').value = name;
+      document.getElementById('formRole').value = role;
+      document.getElementById('formCardno').value = cardno;
+      modal.showModal();
+    }
+
+    function closeAddUserModal() {
+      modal.close();
+    }
+
+    // Add user submit
+    async function submitAddUser(event) {
+      event.preventDefault();
+      const uid = parseInt(document.getElementById('formUid').value, 10);
+      const userId = document.getElementById('formUserId').value;
+      const name = document.getElementById('formName').value;
+      const role = parseInt(document.getElementById('formRole').value, 10);
+      const cardno = parseInt(document.getElementById('formCardno').value, 10);
+
+      // Check if we are demoting the last admin in edit mode
+      const originalUser = usersList.find(u => u.uid === uid);
+      if (originalUser && originalUser.role === 14 && role !== 14) {
+        const adminCount = usersList.filter(u => u.role === 14).length;
+        if (adminCount <= 1) {
+          logToConsole(`Failed: Cannot demote the last administrator user.`, 'error');
+          return;
+        }
+      }
+
+      logToConsole(`Adding/updating user on edge device...`);
+      try {
+        const res = await fetch(`${API_BASE}/api/users`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid, userId, name, role, cardno })
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        logToConsole(`User saved successfully: Name=${name}, UID=${uid}`, 'success');
+        closeAddUserModal();
+        await fetchAllData();
+      } catch (err) {
+        logToConsole(`Failed to save user: ${err.message}`, 'error');
+      }
+    }
+
+    // Delete user helper
+    async function deleteDeviceUser(uid) {
+      const user = usersList.find(u => u.uid === uid);
+      if (user && user.role === 14) {
+        const adminCount = usersList.filter(u => u.role === 14).length;
+        if (adminCount <= 1) {
+          logToConsole(`Failed: Cannot delete the last administrator user.`, 'error');
+          return;
+        }
+      }
+
+      if (confirm(`Are you sure you want to delete user UID ${uid}?`)) {
+        logToConsole(`Deleting user with UID ${uid}...`);
+        try {
+          const res = await fetch(`${API_BASE}/api/users/${uid}`, { method: 'DELETE' });
+          const data = await res.json();
+          if (data.error) throw new Error(data.error);
+
+          logToConsole(`User UID ${uid} deleted successfully.`, 'success');
+          await fetchAllData();
+        } catch (err) {
+          logToConsole(`Failed to delete user: ${err.message}`, 'error');
+        }
+      }
+    }
+
+    // Change user role helper
+    async function changeUserRole(uid, userId, name, newRole, cardno) {
+      const parsedRole = parseInt(newRole, 10);
+      const user = usersList.find(u => u.uid === uid);
+
+      // Prevent changing the last administrator's role
+      if (user && user.role === 14 && parsedRole !== 14) {
+        const adminCount = usersList.filter(u => u.role === 14).length;
+        if (adminCount <= 1) {
+          logToConsole(`Failed: Cannot demote the last administrator user.`, 'error');
+          renderUsers();
+          return;
+        }
+      }
+
+      logToConsole(`Updating role for user UID ${uid} to code ${newRole}...`);
+      try {
+        const res = await fetch(`${API_BASE}/api/users`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid, userId, name, role: parsedRole, cardno })
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        logToConsole(`User role updated successfully.`, 'success');
+        await fetchAllData();
+      } catch (err) {
+        logToConsole(`Failed to update user role: ${err.message}`, 'error');
+        renderUsers();
+      }
+    }
+
+    // Delete logs by date range helper
+    function deleteLogsByRange() {
+      const startVal = document.getElementById('logStartDate').value;
+      const endVal = document.getElementById('logEndDate').value;
+      if (!startVal || !endVal) {
+        alert('Please select both Start and End dates.');
+        return;
+      }
+
+      const start = new Date(startVal + 'T00:00:00');
+      const end = new Date(endVal + 'T23:59:59');
+
+      logToConsole(`Attempting date range logs delete: ${start.toLocaleDateString()} to ${end.toLocaleDateString()}...`);
+      logToConsole(`[ZK] Note: Hardware memory only supports full clear (CMD_CLEAR_ATTLOG). Deleting records from local database and display view...`, 'warn');
+
+      const initialCount = logsList.length;
+      logsList = logsList.filter(log => {
+        const logDate = new Date(log.record_time);
+        return logDate < start || logDate > end;
+      });
+
+      const deletedCount = initialCount - logsList.length;
+      logToConsole(`SUCCESS: Deleted ${deletedCount} logs from local memory buffer.`, 'success');
+      renderAttendance();
+    }
+
+
+
+    // Delete a single attendance log by SN
+    async function deleteLogBySn(sn) {
+      if (confirm(`Are you sure you want to delete attendance record SN ${sn}?`)) {
+        logToConsole(`Deleting attendance record SN ${sn}...`);
+        try {
+          const res = await fetch(`${API_BASE}/api/attendance/${sn}`, { method: 'DELETE' });
+          const data = await res.json();
+          if (data.error) throw new Error(data.error);
+
+          logToConsole(`Record SN ${sn} successfully deleted.`, 'success');
+          // Update local logs list
+          logsList = logsList.filter(log => log.sn !== sn);
+          renderAttendance();
+        } catch (err) {
+          logToConsole(`Failed to delete record SN ${sn}: ${err.message}`, 'error');
+        }
+      }
+    }
+
+    const enrollFpModal = document.getElementById('enrollFpDialog');
+
+    function openEnrollFpModal(userId) {
+      document.getElementById('enrollFpUserId').value = userId;
+      document.getElementById('enrollFpFingerIndex').value = "0"; // default to Right Thumb
+      enrollFpModal.showModal();
+    }
+
+    // Close enroll finger modal
+    function closeEnrollFpModal() {
+      enrollFpModal.close();
+    }
+
+    // Start fingerprint enrollment
+    async function submitEnrollFp(event) {
+      event.preventDefault();
+      const userId = document.getElementById('enrollFpUserId').value;
+      const fingerIndex = parseInt(document.getElementById('enrollFpFingerIndex').value, 10);
+
+      closeEnrollFpModal();
+      logToConsole(`Activating remote fingerprint enrollment for User ID "${userId}" (Finger ${fingerIndex})...`, 'cmd');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/enroll-fp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, fingerIndex })
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        logToConsole(`SUCCESS: Device is now in Enroll Mode! Ask the user to press their finger on the sensor 3 times.`, 'success');
+      } catch (err) {
+        logToConsole(`Enrollment start failed: ${err.message}`, 'error');
+      }
+    }
+  </script>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2.5 max-w-sm pointer-events-none"></div>
+
+  <script>
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'toast-item flex items-start gap-3 bg-zinc-900/95 border text-sm rounded-xl px-4 py-3.5 shadow-2xl backdrop-blur-md transition-all duration-300';
+
+      let borderClass = 'border-zinc-800 text-zinc-300';
+      let icon = 'ℹ️';
+      if (type === 'success') {
+        borderClass = 'border-emerald-800/80 bg-emerald-950/80 text-emerald-300';
+        icon = '✨';
+      } else if (type === 'error') {
+        borderClass = 'border-red-800/80 bg-red-950/80 text-red-300';
+        icon = '🚨';
+      } else if (type === 'warn') {
+        borderClass = 'border-amber-800/80 bg-amber-950/80 text-amber-300';
+        icon = '⚠️';
+      } else if (type === 'cmd') {
+        borderClass = 'border-violet-850 bg-violet-950/85 text-violet-300';
+        icon = '⚡';
+      }
+
+      toast.className += ` ${borderClass}`;
+      toast.innerHTML = `
+        <span class="text-base flex-shrink-0 leading-none">${icon}</span>
+        <div class="flex-1 font-medium leading-snug">${message}</div>
+        <button onclick="this.parentElement.remove()" class="text-zinc-500 hover:text-zinc-300 cursor-pointer text-sm font-bold ml-2 leading-none flex-shrink-0">&times;</button>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => {
+          toast.remove();
+        }, 200);
+      }, 4000);
+    }
+  </script>
+</body>
+
+</html>
