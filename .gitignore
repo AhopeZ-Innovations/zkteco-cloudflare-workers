@@ -8,6 +8,7 @@ dist/
 
 # IDE and OS files
 .DS_Store
+developer_guide.md
 .vscode/
 .idea/
 *.suo

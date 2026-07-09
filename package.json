@@ -41,6 +41,14 @@
   ],
   "author": "ArunKumar <arun@ahopez.in> (https://github.com/AhopeZ-Innovations)",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AhopeZ-Innovations/zkteco-cloudflare-workers.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AhopeZ-Innovations/zkteco-cloudflare-workers/issues"
+  },
+  "homepage": "https://github.com/AhopeZ-Innovations/zkteco-cloudflare-workers#readme",
   "devDependencies": {
     "@types/node": "^20.11.0",
     "tsup": "^8.0.2",
