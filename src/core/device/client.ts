@@ -340,13 +340,13 @@ export class ZKClient {
     return 'Real-time registration successful. Note: Standard HTTP endpoints in Workers cannot maintain long-lived streams without Durable Objects.';
   }
 
-  async enrollFingerprint(userId: string, fingerIndex: number): Promise<void> {
+  async enrollFingerprint(uid: number, fingerIndex: number, create = false): Promise<void> {
     const data = new Uint8Array(26);
-    const encoder = new TextEncoder();
-    const userIdBuf = encoder.encode(userId);
-    data.set(userIdBuf.slice(0, 9), 0);
+    const view = new DataView(data.buffer);
+    // CMD_STARTENROLL expects the numeric uid as a uint16 LE in bytes 0-1, NOT a string
+    view.setUint16(0, uid, true);
     data[24] = fingerIndex;
-    data[25] = 1;
+    data[25] = create ? 1 : 0; // 0 = enroll on existing user, 1 = create new user
 
     await this.executeCmd(COMMANDS.CMD_CANCELCAPTURE, '');
     await this.executeCmd(COMMANDS.CMD_STARTENROLL, data);

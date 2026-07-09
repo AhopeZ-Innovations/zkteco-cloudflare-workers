@@ -1,6 +1,6 @@
 {
   "name": "@ahopez/zk-workers-lib",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A powerful, runtime-agnostic ZKTeco Biometric Device SDK for Node.js and Cloudflare Workers (raw TCP sockets).",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
