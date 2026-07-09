@@ -1,9 +1,9 @@
-# zk-workers-lib
+# @ahopez/zk-workers-lib
 
-[![npm version](https://badge.fury.io/js/zk-workers-lib.svg)](https://badge.fury.io/js/zk-workers-lib)
+[![npm version](https://badge.fury.io/js/%40ahopez%2Fzk-workers-lib.svg)](https://badge.fury.io/js/%40ahopez%2Fzk-workers-lib)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/node/v/zk-workers-lib.svg)](https://nodejs.org/)
-[![Downloads](https://img.shields.io/npm/dm/zk-workers-lib.svg)](https://www.npmjs.com/package/zk-workers-lib)
+[![Node.js Version](https://img.shields.io/node/v/%40ahopez%2Fzk-workers-lib.svg)](https://nodejs.org/)
+[![Downloads](https://img.shields.io/npm/dm/%40ahopez%2Fzk-workers-lib.svg)](https://www.npmjs.com/package/%40ahopez%2Fzk-workers-lib)
 
 A modern, **runtime-agnostic ZKTeco Biometric Device SDK** written in TypeScript. Decoupled from native platform modules, this SDK enables communication with physical biometric fingerprint scanners from both **Node.js** and edge-computing runtimes like **Cloudflare Workers**.
 
@@ -23,15 +23,15 @@ Traditional ZKTeco node packages (like `node-zklib` or `zklib-js`) are hardcoded
 ## 📦 Installation
 
 ```bash
-npm install zk-workers-lib
+npm install @ahopez/zk-workers-lib
 ```
 
 ```bash
-yarn add zk-workers-lib
+yarn add @ahopez/zk-workers-lib
 ```
 
 ```bash
-pnpm add zk-workers-lib
+pnpm add @ahopez/zk-workers-lib
 ```
 
 ---
@@ -40,8 +40,8 @@ pnpm add zk-workers-lib
 
 ### 1. Node.js Integration
 ```typescript
-import { ZKClient, getUsers, getAttendances } from 'zk-workers-lib';
-import { NodeTransport } from 'zk-workers-lib/transports/node';
+import { ZKClient, getUsers, getAttendances } from '@ahopez/zk-workers-lib';
+import { NodeTransport } from '@ahopez/zk-workers-lib/transports/node';
 
 const transport = new NodeTransport({ ip: '192.168.1.201', port: 4370, timeout: 10000 });
 const client = new ZKClient(transport);
@@ -68,8 +68,8 @@ main();
 
 ### 2. Cloudflare Workers Integration
 ```typescript
-import { ZKClient, getUsers } from 'zk-workers-lib';
-import { CloudflareTransport } from 'zk-workers-lib/transports/cloudflare';
+import { ZKClient, getUsers } from '@ahopez/zk-workers-lib';
+import { CloudflareTransport } from '@ahopez/zk-workers-lib/transports/cloudflare';
 
 export default {
   async fetch(request, env, ctx) {
@@ -143,8 +143,8 @@ export default {
 
 ### User Registration & Role Configuration
 ```typescript
-import { ZKClient, setUser } from 'zk-workers-lib';
-import { NodeTransport } from 'zk-workers-lib/transports/node';
+import { ZKClient, setUser } from '@ahopez/zk-workers-lib';
+import { NodeTransport } from '@ahopez/zk-workers-lib/transports/node';
 
 const client = new ZKClient(new NodeTransport({ ip: '192.168.1.201' }));
 await client.createSocket();
@@ -166,8 +166,8 @@ await client.disconnect();
 ### Remote Fingerprint Enrollment Flow
 Enrolls a user's right index finger (index 1) remotely from the dashboard:
 ```typescript
-import { ZKClient } from 'zk-workers-lib';
-import { NodeTransport } from 'zk-workers-lib/transports/node';
+import { ZKClient } from '@ahopez/zk-workers-lib';
+import { NodeTransport } from '@ahopez/zk-workers-lib/transports/node';
 
 const client = new ZKClient(new NodeTransport({ ip: '192.168.1.201' }));
 await client.createSocket();
