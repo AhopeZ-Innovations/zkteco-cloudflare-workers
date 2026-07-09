@@ -11,7 +11,7 @@ export function decodeUserData72(userData: Uint8Array): User {
   const password = decoder.decode(userData.subarray(3, 11)).split('\0')[0];
   const name = decoder.decode(userData.subarray(11, 35)).split('\0')[0];
   const cardno = view.getUint32(35, true);
-  const userId = decoder.decode(userData.subarray(48, 57)).replace(/\0/g, '').trim();
+  const userId = decoder.decode(userData.subarray(48, 57)).split('\0')[0].trim();
 
   return { uid, role, password, name, cardno, userId };
 }
